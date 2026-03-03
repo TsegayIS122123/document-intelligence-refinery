@@ -213,17 +213,15 @@ quadrantChart
     title Tool Selection Matrix
     x-axis Simple Layout --> Complex Layout
     y-axis Low Structure --> High Structure
-    quadrant-1 "pdfplumber Ideal" [Fast Text]
-    quadrant-2 "Docling Ideal" [Layout-Aware]
-    quadrant-3 "OCR Needed" [Vision Models]
+    quadrant-1 "pdfplumber Ideal"
+    quadrant-2 "Docling Ideal"
+    quadrant-3 "OCR Needed"
     quadrant-4 "Hybrid Approach"
     "Class A (CBE)": [0.7, 0.6]
     "Class B (Audit)": [0.2, 0.1]
     "Class C (FTA)": [0.8, 0.8]
     "Class D (Tax)": [0.3, 0.9]
 ```
-
----
 
 ## 5. Failure Modes Observed
 
@@ -232,9 +230,9 @@ quadrantChart
 ```mermaid
 graph LR
     subgraph Original["Original Table Structure"]
-        O1[| Year | Revenue | Growth |]
-        O2[| 2023 | 45.2M   | 7.4%   |]
-        O3[| 2022 | 42.1M   | 5.2%   |]
+        O1["| Year | Revenue | Growth |"]
+        O2["| 2023 | 45.2M   | 7.4%   |"]
+        O3["| 2022 | 42.1M   | 5.2%   |"]
     end
     
     subgraph Extracted["pdfplumber Extraction"]
@@ -242,9 +240,9 @@ graph LR
     end
     
     subgraph Impact["Impact"]
-        I1[❌ Cannot query by year]
-        I2[❌ Lost column headers]
-        I3[❌ Data unusable for analysis]
+        I1["❌ Cannot query by year"]
+        I2["❌ Lost column headers"]
+        I3["❌ Data unusable for analysis"]
     end
     
     Original --> Extracted --> Impact
@@ -255,31 +253,31 @@ graph LR
 ```mermaid
 graph TD
     subgraph Table["Original Tax Rate Table"]
-        T1[Year | Rate | Notes]
-        T2[2019 | 15% | Actual]
-        T3[2020 | 16% | Actual]
-        T4[2021 | 18% | Estimated]
-        T5[2022 | 19% | Projected]
+        T1["Year | Rate | Notes"]
+        T2["2019 | 15% | Actual"]
+        T3["2020 | 16% | Actual"]
+        T4["2021 | 18% | Estimated"]
+        T5["2022 | 19% | Projected"]
     end
     
     subgraph BadChunking["❌ Bad Chunking (Token-based)"]
-        B1[Chunk 1: 2019-2020 rates]
-        B2[Chunk 2: 2021-2022 rates + notes]
+        B1["Chunk 1: 2019-2020 rates"]
+        B2["Chunk 2: 2021-2022 rates + notes"]
     end
     
     subgraph GoodChunking["✅ Good Chunking (Semantic)"]
-        G1[Full table preserved as one unit]
-        G2[Headers + all rows + notes]
+        G1["Full table preserved as one unit"]
+        G2["Headers + all rows + notes"]
     end
     
     Table --> BadChunking
     Table --> GoodChunking
     
-    BadChunking --> Query1[Query: "2021 rate?"]
-    Query1 --> Result1[❌ "18%" missing "Estimated" context]
+    BadChunking --> Query1["Query: '2021 rate?'"]
+    Query1 --> Result1["❌ '18%' missing 'Estimated' context"]
     
-    GoodChunking --> Query2[Query: "2021 rate?"]
-    Query2 --> Result2[✅ "18% (Estimated)"]
+    GoodChunking --> Query2["Query: '2021 rate?'"]
+    Query2 --> Result2["✅ '18% (Estimated)'"]
 ```
 
 ### 5.3 Provenance Blindness (Class B - DBE Audit)
@@ -291,25 +289,23 @@ graph LR
     end
     
     subgraph Without["❌ Without Provenance"]
-        W[Answer: "Unqualified opinion"]
-        W2[Source: "I don't know"]
-        W3[Auditor: ❌ Cannot verify]
+        W["Answer: 'Unqualified opinion'"]
+        W2["Source: 'I don't know'"]
+        W3["Auditor: ❌ Cannot verify"]
     end
     
     subgraph With["✅ With ProvenanceChain"]
-        Z[Answer: "Unqualified opinion"]
-        Z2[Source: Audit Report - 2023.pdf]
-        Z3[Page: 3, Paragraph 2]
-        Z4[Bounding Box: (45, 120, 500, 180)]
-        Z5[Auditor: ✅ Can verify]
+        Z["Answer: 'Unqualified opinion'"]
+        Z2["Source: Audit Report - 2023.pdf"]
+        Z3["Page: 3, Paragraph 2"]
+        Z4["Bounding Box: (45, 120, 500, 180)"]
+        Z5["Auditor: ✅ Can verify"]
     end
     
     Question --> Without
     Question --> With
 ```
-
 ---
-
 ## 6. Cost Analysis & Smart Routing
 
 ```mermaid
