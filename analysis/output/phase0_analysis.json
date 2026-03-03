@@ -1,0 +1,254 @@
+{
+  "Class A - CBE Annual (2023-24)": {
+    "doc_name": "Class A - CBE Annual (2023-24)",
+    "filename": "CBE ANNUAL REPORT 2023-24.pdf",
+    "size_mb": 28.49,
+    "total_pages": 161,
+    "has_text_layer": true,
+    "avg_chars_per_page": 947.2,
+    "avg_image_ratio": 0.3999631788700742,
+    "has_tables": false,
+    "has_multi_column": true,
+    "page_details": [
+      {
+        "page": 1,
+        "char_count": 0,
+        "image_count": 1,
+        "image_ratio": 1.0,
+        "has_text": false,
+        "table_count": 0,
+        "word_count": 0
+      },
+      {
+        "page": 2,
+        "char_count": 0,
+        "image_count": 1,
+        "image_ratio": 1.0,
+        "has_text": false,
+        "table_count": 0,
+        "word_count": 0
+      },
+      {
+        "page": 3,
+        "char_count": 841,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 134
+      },
+      {
+        "page": 4,
+        "char_count": 1995,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 318
+      },
+      {
+        "page": 5,
+        "char_count": 1900,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 299
+      }
+    ],
+    "extraction_strategy": "Strategy B: Layout-Aware",
+    "confidence": "MEDIUM",
+    "pages_analyzed": 5,
+    "document_type": "MIXED",
+    "reason": "Mixed content needs layout-aware extraction"
+  },
+  "Class B - DBE Audit (2023)": {
+    "doc_name": "Class B - DBE Audit (2023)",
+    "filename": "Audit Report - 2023.pdf",
+    "size_mb": 19.55,
+    "total_pages": 95,
+    "has_text_layer": true,
+    "avg_chars_per_page": 24.2,
+    "avg_image_ratio": 0.8032415192804676,
+    "has_tables": false,
+    "has_multi_column": true,
+    "page_details": [
+      {
+        "page": 1,
+        "char_count": 121,
+        "image_count": 1,
+        "image_ratio": 0.016,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 16
+      },
+      {
+        "page": 2,
+        "char_count": 0,
+        "image_count": 1,
+        "image_ratio": 1.0,
+        "has_text": false,
+        "table_count": 0,
+        "word_count": 0
+      },
+      {
+        "page": 3,
+        "char_count": 0,
+        "image_count": 1,
+        "image_ratio": 1.0,
+        "has_text": false,
+        "table_count": 0,
+        "word_count": 0
+      },
+      {
+        "page": 4,
+        "char_count": 0,
+        "image_count": 1,
+        "image_ratio": 1.0,
+        "has_text": false,
+        "table_count": 0,
+        "word_count": 0
+      },
+      {
+        "page": 5,
+        "char_count": 0,
+        "image_count": 1,
+        "image_ratio": 1.0,
+        "has_text": false,
+        "table_count": 0,
+        "word_count": 0
+      }
+    ],
+    "extraction_strategy": "Strategy C: Vision-Augmented",
+    "confidence": "HIGH",
+    "pages_analyzed": 5,
+    "document_type": "SCANNED_IMAGE",
+    "reason": "Scanned document requires vision model"
+  },
+  "Class C - FTA Report (2022)": {
+    "doc_name": "Class C - FTA Report (2022)",
+    "filename": "fta_performance_survey_final_report_2022.pdf",
+    "size_mb": 2.75,
+    "total_pages": 155,
+    "has_text_layer": true,
+    "avg_chars_per_page": 3646.4,
+    "avg_image_ratio": 0.001451601855935821,
+    "has_tables": true,
+    "has_multi_column": true,
+    "page_details": [
+      {
+        "page": 1,
+        "char_count": 318,
+        "image_count": 1,
+        "image_ratio": 0.007,
+        "has_text": true,
+        "table_count": 4,
+        "word_count": 38
+      },
+      {
+        "page": 2,
+        "char_count": 5221,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 216
+      },
+      {
+        "page": 3,
+        "char_count": 3872,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 216
+      },
+      {
+        "page": 4,
+        "char_count": 4387,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 395
+      },
+      {
+        "page": 5,
+        "char_count": 4434,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 439
+      }
+    ],
+    "extraction_strategy": "Strategy B: Layout-Aware",
+    "confidence": "HIGH",
+    "pages_analyzed": 5,
+    "document_type": "NATIVE_DIGITAL",
+    "reason": "Complex layout needs structure preservation"
+  },
+  "Class D - Tax Expenditure (2021-22)": {
+    "doc_name": "Class D - Tax Expenditure (2021-22)",
+    "filename": "tax_expenditure_ethiopia_2021_22.pdf",
+    "size_mb": 0.95,
+    "total_pages": 60,
+    "has_text_layer": true,
+    "avg_chars_per_page": 1596.4,
+    "avg_image_ratio": 0.008619869015544549,
+    "has_tables": false,
+    "has_multi_column": true,
+    "page_details": [
+      {
+        "page": 1,
+        "char_count": 121,
+        "image_count": 1,
+        "image_ratio": 0.025,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 18
+      },
+      {
+        "page": 2,
+        "char_count": 712,
+        "image_count": 1,
+        "image_ratio": 0.018,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 117
+      },
+      {
+        "page": 3,
+        "char_count": 2891,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 149
+      },
+      {
+        "page": 4,
+        "char_count": 2704,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 415
+      },
+      {
+        "page": 5,
+        "char_count": 1554,
+        "image_count": 0,
+        "image_ratio": 0.0,
+        "has_text": true,
+        "table_count": 0,
+        "word_count": 253
+      }
+    ],
+    "extraction_strategy": "Strategy B: Layout-Aware",
+    "confidence": "HIGH",
+    "pages_analyzed": 5,
+    "document_type": "NATIVE_DIGITAL",
+    "reason": "Complex layout needs structure preservation"
+  }
+}

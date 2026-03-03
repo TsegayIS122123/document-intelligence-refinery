@@ -57,6 +57,89 @@ Every answer includes:
 - ✅ Audit mode to detect hallucinations
 
 ## 🏗️ Architecture
+## 🏭 Document Intelligence Refinery Architecture
+
+```mermaid
+graph TB
+    subgraph Input["📄 Input Documents"]
+        A1[PDFs - Native Digital]
+        A2[PDFs - Scanned]
+        A3[Excel/CSV Reports]
+    end
+
+    subgraph Triage["🏥 Triage Agent"]
+        B1[Character Density Analysis]
+        B2[Layout Complexity Detection]
+        B3[Domain Classification]
+        B4[Document Profile]
+        
+        B1 --> B4
+        B2 --> B4
+        B3 --> B4
+    end
+
+    subgraph Strategies["⚙️ Multi-Strategy Extraction"]
+        C1[Fast Text<br/>pdfplumber]
+        C2[Layout-Aware<br/>Docling]
+        C3[Vision-Augmented<br/>VLM]
+        
+        C4{Escalation Guard}
+        
+        C1 --> C4
+        C4 -->|Low Confidence| C2
+        C2 -->|Low Confidence| C3
+    end
+
+    subgraph Chunking["🧠 Semantic Chunking"]
+        D1[No Table Splitting]
+        D2[Figure-Caption Binding]
+        D3[Section Hierarchy]
+        D4[LDU Generation]
+    end
+
+    subgraph Index["🗺️ PageIndex"]
+        E1[Section Navigation]
+        E2[Entity Extraction]
+        E3[LLM Summaries]
+    end
+
+    subgraph Query["💬 Query Interface"]
+        F1[LangGraph Agent]
+        F2[ProvenanceChain]
+        F3[Audit Mode]
+    end
+
+    Input --> Triage
+    Triage --> Strategies
+    Strategies --> Chunking
+    Chunking --> Index
+    Index --> Query
+```
+## 📊 The 50/100 Rule
+
+```mermaid
+graph LR
+    subgraph Rule["Character Density Rule"]
+        R1[<50 chars/page] --> Scan[Scanned → Vision Model]
+        R2[>100 chars/page] --> Digi[Digital → Fast/Layout]
+        R3[50-100 chars] --> Mix[Mixed → Sample & Decide]
+    end
+    
+    subgraph Validation["Validated on 471 Pages"]
+        V1[Class B: 24 chars] --> Scan
+        V2[Class C: 3646 chars] --> Digi
+        V3[Class A: 947 chars] --> Mix
+    end
+```
+## 💰 Smart Routing Savings
+
+```mermaid
+xychart-beta
+    title "Annual Cost Comparison (100,000 pages)"
+    x-axis ["Always Vision", "Always Layout", "Always Fast", "Smart Routing"]
+    y-axis "Cost ($)" 0 --> 10000
+    bar [10000, 1000, 100, 2800]
+```
 ```bash
                 ┌────────────────────┐
                 │      Input PDF     │

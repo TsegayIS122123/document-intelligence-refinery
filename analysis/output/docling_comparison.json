@@ -1,0 +1,86 @@
+{
+  "Class A - CBE Annual": {
+    "pdfplumber": {
+      "method": "pdfplumber",
+      "success": true,
+      "text_length": 841,
+      "tables_found": 0,
+      "pages_processed": 3,
+      "time_seconds": 1.23,
+      "sample_text": ""
+    },
+    "docling": {
+      "method": "docling",
+      "success": false,
+      "text_length": 0,
+      "tables_found": 0,
+      "figures_found": 0,
+      "time_seconds": 0.01,
+      "pages_processed": 0,
+      "error": "'PdfFormatOption' object has no attribute 'items'"
+    }
+  },
+  "Class B - DBE Audit": {
+    "pdfplumber": {
+      "method": "pdfplumber",
+      "success": true,
+      "text_length": 121,
+      "tables_found": 0,
+      "pages_processed": 3,
+      "time_seconds": 0.28,
+      "sample_text": "INDEPENDENT AUDiTOR\u2019S REPORT\nAND\nFiNANCiAL STATEMENTS\n30 JUNE 2023\nDEVELOPMENT BANK OF ETHIOPIA\nYour Development partner!..."
+    },
+    "docling": {
+      "method": "docling",
+      "success": false,
+      "text_length": 0,
+      "tables_found": 0,
+      "figures_found": 0,
+      "time_seconds": 0.0,
+      "pages_processed": 0,
+      "error": "'PdfFormatOption' object has no attribute 'items'"
+    }
+  },
+  "Class C - FTA Report": {
+    "pdfplumber": {
+      "method": "pdfplumber",
+      "success": true,
+      "text_length": 9411,
+      "tables_found": 4,
+      "pages_processed": 3,
+      "time_seconds": 1.11,
+      "sample_text": "Assessment of Financial\nTransparency and Accountability\n(FTA) Implementation in Ethiopia\nFinal Report\nRFP No: ET-NCB-MOFEC-COPCU-129904-CS-QCBS\nSUBMITTED TO:\nMinistry of Finance (MoF)\nAddis Ababa, Eth..."
+    },
+    "docling": {
+      "method": "docling",
+      "success": false,
+      "text_length": 0,
+      "tables_found": 0,
+      "figures_found": 0,
+      "time_seconds": 0.0,
+      "pages_processed": 0,
+      "error": "'PdfFormatOption' object has no attribute 'items'"
+    }
+  },
+  "Class D - Tax Report": {
+    "pdfplumber": {
+      "method": "pdfplumber",
+      "success": true,
+      "text_length": 3724,
+      "tables_found": 0,
+      "pages_processed": 3,
+      "time_seconds": 0.54,
+      "sample_text": "Import tax expenditure report\n:\nFY 2018/19 \u2013 2020/21\nTax Policy Directorate, Ministry of Finance, Ethiopia\nSeptember 2022..."
+    },
+    "docling": {
+      "method": "docling",
+      "success": false,
+      "text_length": 0,
+      "tables_found": 0,
+      "figures_found": 0,
+      "time_seconds": 0.01,
+      "pages_processed": 0,
+      "error": "'PdfFormatOption' object has no attribute 'items'"
+    }
+  }
+}
