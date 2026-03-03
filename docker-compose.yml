@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  refinery:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./.refinery:/app/.refinery
+      - ./rubric:/app/rubric
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    command: refinery-demo
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - chromadb-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=FALSE
+
+volumes:
+  chromadb-data:
