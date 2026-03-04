@@ -6,7 +6,7 @@
       "text_length": 841,
       "tables_found": 0,
       "pages_processed": 3,
-      "time_seconds": 1.23,
+      "time_seconds": 1.83,
       "sample_text": ""
     },
     "docling": {
@@ -15,7 +15,7 @@
       "text_length": 0,
       "tables_found": 0,
       "figures_found": 0,
-      "time_seconds": 0.01,
+      "time_seconds": 0.0,
       "pages_processed": 0,
       "error": "'PdfFormatOption' object has no attribute 'items'"
     }
@@ -27,7 +27,7 @@
       "text_length": 121,
       "tables_found": 0,
       "pages_processed": 3,
-      "time_seconds": 0.28,
+      "time_seconds": 0.51,
       "sample_text": "INDEPENDENT AUDiTOR\u2019S REPORT\nAND\nFiNANCiAL STATEMENTS\n30 JUNE 2023\nDEVELOPMENT BANK OF ETHIOPIA\nYour Development partner!..."
     },
     "docling": {
@@ -48,7 +48,7 @@
       "text_length": 9411,
       "tables_found": 4,
       "pages_processed": 3,
-      "time_seconds": 1.11,
+      "time_seconds": 1.57,
       "sample_text": "Assessment of Financial\nTransparency and Accountability\n(FTA) Implementation in Ethiopia\nFinal Report\nRFP No: ET-NCB-MOFEC-COPCU-129904-CS-QCBS\nSUBMITTED TO:\nMinistry of Finance (MoF)\nAddis Ababa, Eth..."
     },
     "docling": {
@@ -78,7 +78,7 @@
       "text_length": 0,
       "tables_found": 0,
       "figures_found": 0,
-      "time_seconds": 0.01,
+      "time_seconds": 0.0,
       "pages_processed": 0,
       "error": "'PdfFormatOption' object has no attribute 'items'"
     }

@@ -1,17 +1,40 @@
-"""Pydantic models for the document intelligence pipeline."""
-
-from .document import DocumentProfile, ExtractedDocument, LDU, PageIndex, ProvenanceChain
-from .enums import OriginType, LayoutComplexity, DomainHint, StrategyType, ChunkType
+# src/models/__init__.py
+from .enums import (
+    OriginType, LayoutComplexity, DomainHint, 
+    StrategyType, ChunkType, ConfidenceLevel
+)
+from .document import (
+    DocumentProfile, PageAnalysis, ExtractedDocument,
+    TextBlock, Table, Figure, LDU,
+    PageIndex, PageIndexNode,
+    Source, ProvenanceChain
+)
 
 __all__ = [
-    "DocumentProfile",
-    "ExtractedDocument",
-    "LDU",
-    "PageIndex",
-    "ProvenanceChain",
+    # Enums
     "OriginType",
-    "LayoutComplexity",
+    "LayoutComplexity", 
     "DomainHint",
     "StrategyType",
     "ChunkType",
+    "ConfidenceLevel",
+    
+    # Document models
+    "DocumentProfile",
+    "PageAnalysis",
+    "ExtractedDocument",
+    "TextBlock",
+    "Table",
+    "Figure",
+    
+    # Chunking models
+    "LDU",
+    
+    # Index models
+    "PageIndex",
+    "PageIndexNode",
+    
+    # Provenance models
+    "Source",
+    "ProvenanceChain",
 ]

@@ -46,22 +46,41 @@ dev = [
     "flake8>=7.0.0",
 ]
 
-extraction = [
-    "docling",  # For Strategy B
-    "opencv-python>=4.9.0",
+[project.scripts]
+refinery-triage = "src.cli:triage"
+refinery-extract = "src.cli:extract"
+refinery-chunk = "src.cli:chunk"
+refinery-index = "src.cli:index"
+refinery-query = "src.cli:query"
+refinery-audit = "src.cli:audit"
+refinery-demo = "src.cli:demo"
+
+# ⭐ CRITICAL FIX: Add this section!
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/README.md",
+    "/pyproject.toml",
+    "/rubric",
 ]
 
-vision = [
-    "openai>=1.0.0",  # For OpenRouter
-]
+[tool.black]
+line-length = 100
+target-version = ['py311']
 
-storage = [
-    "chromadb>=0.5.0",
-    "faiss-cpu>=1.8.0",
-    "sqlalchemy>=2.0.0",
-    "pandas>=2.0.0",
-]
+[tool.isort]
+profile = "black"
+line_length = 100
 
-all = [
-    "document-intelligence-refinery[dev,extraction,vision,storage]",
-]
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]
+pythonpath = ["."]  # This helps pytest find your modules!
