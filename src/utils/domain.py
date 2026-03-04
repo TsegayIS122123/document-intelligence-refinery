@@ -1,92 +1,136 @@
 # src/utils/domain.py
-from typing import Dict, List, Tuple
+"""
+Domain classification using keywords from config.
+Now fully externalized - no hardcoded keywords!
+"""
+
+from typing import Dict, List, Tuple, Optional
+from pathlib import Path
+import fnmatch
+import yaml
+
 from ..models.enums import DomainHint
-import re
+from ..config.settings import settings
+
 
 class DomainClassifier:
     """
-    Classifies document domain based on keyword matching.
-    For scanned docs, uses filename as hint.
+    Classifies document domain based on keywords from config.
+    All keywords are externalized - edit YAML, not code!
+    For scanned docs, uses filename hints from config.
     """
-    
-    def __init__(self):
-        # Keywords from your document analysis
-        self.keywords = {
-            DomainHint.FINANCIAL: [
-                'revenue', 'expense', 'profit', 'loss', 'income',
-                'balance sheet', 'financial', 'fiscal', 'tax',
-                'expenditure', 'budget', 'asset', 'liability',
-                'cbe', 'bank', 'interest', 'loan', 'deposit'
-            ],
-            DomainHint.LEGAL: [
-                'audit', 'auditor', 'opinion', 'statement',
-                'compliance', 'regulation', 'legal', 'law',
-                'independent', 'report', 'findings', 'attest',
-                'assurance', 'examination', 'review'
-            ],
-            DomainHint.TECHNICAL: [
-                'assessment', 'performance', 'implementation',
-                'analysis', 'evaluation', 'survey', 'report',
-                'findings', 'recommendations', 'methodology'
-            ],
-            DomainHint.MEDICAL: [
-                'patient', 'clinical', 'diagnosis', 'treatment',
-                'health', 'medical', 'hospital', 'doctor'
-            ]
-        }
+
+    def __init__(self, config_path: Optional[Path] = None):
+        self.config = settings.load_rules(config_path)
+        self.keywords = self._load_keywords_from_config()
+        self.filename_hints = self._load_filename_hints()
+        self.weights = self._load_weights()
+
+    def _load_keywords_from_config(self) -> Dict[DomainHint, List[str]]:
+        """Load domain keywords from config file"""
+        domain_config = self.config.get('domain_classification', {})
+        keywords = {}
         
-        # Filename-based hints for scanned docs
-        self.filename_hints = {
-            'audit': DomainHint.LEGAL,
-            'auditor': DomainHint.LEGAL,
-            'legal': DomainHint.LEGAL,
-            'financial': DomainHint.FINANCIAL,
-            'cbe': DomainHint.FINANCIAL,
-            'tax': DomainHint.FINANCIAL,
-            'fta': DomainHint.TECHNICAL,
-            'technical': DomainHint.TECHNICAL,
-        }
+        for domain_name, domain_data in domain_config.items():
+            # Skip non-domain sections (like 'filename_hints')
+            if domain_name == 'filename_hints':
+                continue
+                
+            try:
+                domain_enum = DomainHint(domain_name)
+                keywords[domain_enum] = domain_data.get('keywords', [])
+            except ValueError:
+                # Skip if not a valid enum
+                print(f"⚠️ Warning: Unknown domain '{domain_name}' in config")
+                continue
+        
+        return keywords
     
+    def _load_filename_hints(self) -> List[Dict]:
+        """Load filename hints from config"""
+        return self.config.get('filename_hints', [])
+    
+    def _load_weights(self) -> Dict[DomainHint, float]:
+        """Load domain weights from config"""
+        domain_config = self.config.get('domain_classification', {})
+        weights = {}
+        
+        for domain_name, domain_data in domain_config.items():
+            if domain_name == 'filename_hints':
+                continue
+                
+            try:
+                domain_enum = DomainHint(domain_name)
+                weights[domain_enum] = domain_data.get('weight', 1.0)
+            except ValueError:
+                continue
+        
+        return weights
+
     def classify(self, text_sample: str, filename: str = "") -> Tuple[DomainHint, float, Dict]:
         """
-        Classify domain based on keyword matches and filename.
+        Classify domain based on config keywords and filename hints.
+        
+        Args:
+            text_sample: Sample text from document (may be empty for scanned docs)
+            filename: Filename for fallback hints
+            
+        Returns:
+            domain: DomainHint enum
+            confidence: float 0-1
+            signals: dict with match counts and reasoning
         """
         text_lower = text_sample.lower()
         signals = {}
         scores = {}
-        
-        # Check text content first
+
+        # Check text content using keywords from config
         for domain, keywords in self.keywords.items():
             matches = sum(1 for kw in keywords if kw in text_lower)
-            signals[domain.value] = matches
-            scores[domain] = matches
-        
-        # If no text matches and we have filename, use filename hints
-        if sum(scores.values()) == 0 and filename:
+            weight = self.weights.get(domain, 1.0)
+            weighted_score = matches * weight
+            signals[domain.value] = weighted_score
+            scores[domain] = weighted_score
+
+        # If no text matches and we have filename, use filename hints from config
+        total_text_score = sum(scores.values())
+        if total_text_score == 0 and filename and self.filename_hints:
             filename_lower = filename.lower()
-            for hint_word, hint_domain in self.filename_hints.items():
-                if hint_word in filename_lower:
-                    scores[hint_domain] = scores.get(hint_domain, 0) + 5
-                    signals[f'filename_hint_{hint_word}'] = 5
-        
+            for hint in self.filename_hints:
+                pattern = hint.get('pattern', '')
+                if pattern and fnmatch.fnmatch(filename_lower, pattern.lower()):
+                    domain_name = hint.get('domain')
+                    hint_confidence = hint.get('confidence', 0.7)
+                    try:
+                        domain = DomainHint(domain_name)
+                        scores[domain] = scores.get(domain, 0) + 10  # High weight for filename match
+                        signals[f'filename_hint_{pattern}'] = hint_confidence
+                    except ValueError:
+                        print(f"⚠️ Warning: Unknown domain '{domain_name}' in filename hint")
+                        continue
+
         # Find best match
         if scores:
             best_domain = max(scores, key=scores.get)
             max_score = scores[best_domain]
-            
-            # Calculate confidence
+
+            # Calculate confidence based on match strength
             if max_score >= 10:
-                confidence = 0.95
+                confidence = 0.95  # Filename match or many keywords
             elif max_score >= 5:
-                confidence = 0.80
+                confidence = 0.80  # Strong keyword match
             elif max_score >= 1:
-                confidence = 0.60
+                confidence = 0.60  # Weak keyword match
             else:
-                confidence = 0.50
-            
+                confidence = 0.50  # No matches
+
             if max_score == 0:
                 return DomainHint.GENERAL, 0.5, signals
-            
+
             return best_domain, confidence, signals
-        
+
         return DomainHint.GENERAL, 0.5, signals
+
+    def get_supported_domains(self) -> List[DomainHint]:
+        """Return list of domains supported in config"""
+        return list(self.keywords.keys())
