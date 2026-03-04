@@ -151,3 +151,28 @@ class ProvenanceChain(BaseModel):
     sources: List[Source] = Field(default_factory=list)
     verified: bool = False
     confidence: float = 1.0
+class DocumentProfileSummary(BaseModel):
+    """Lightweight summary for quick viewing"""
+    doc_id: str
+    filename: str
+    origin_type: OriginType
+    layout_complexity: LayoutComplexity
+    domain_hint: DomainHint
+    recommended_strategy: StrategyType
+    profile_confidence: ConfidenceLevel
+    estimated_cost_usd: float
+    created_at: datetime
+    
+    @classmethod
+    def from_profile(cls, profile: DocumentProfile) -> "DocumentProfileSummary":
+        return cls(
+            doc_id=profile.doc_id,
+            filename=profile.filename,
+            origin_type=profile.origin_type,
+            layout_complexity=profile.layout_complexity,
+            domain_hint=profile.domain_hint,
+            recommended_strategy=profile.recommended_strategy,
+            profile_confidence=profile.profile_confidence,
+            estimated_cost_usd=profile.estimated_cost_usd,
+            created_at=profile.created_at
+        )

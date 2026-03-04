@@ -109,5 +109,87 @@ def demo(document):
     
     console.print("\n[bold green]✅ Demo Complete[/bold green]")
 
+
+@cli.command()
+@click.argument('document', type=click.Path(exists=True))
+@click.option('--profile', '-p', help='Document profile JSON (optional)')
+@click.option('--strategy', '-s', type=click.Choice(['auto', 'fast', 'layout', 'vision']), default='auto')
+@click.option('--output', '-o', default='.refinery/extractions', help='Output directory')
+def extract(document, profile, strategy, output):
+    """Extract content from document using optimal strategy"""
+    
+    from .agents.triage import TriageAgent
+    from .agents.extractor import ExtractionRouter
+    from .models.document import DocumentProfile
+    
+    console.print(f"[bold blue]⚙️ Extracting:[/bold blue] {document}")
+    
+    with Progress() as progress:
+        task = progress.add_task("Extracting...", total=3)
+        
+        # Step 1: Get or create profile
+        if profile:
+            with open(profile, 'r') as f:
+                import json
+                profile_data = json.load(f)
+                doc_profile = DocumentProfile(**profile_data)
+        else:
+            agent = TriageAgent()
+            doc_profile = agent.analyze(document)
+            progress.update(task, advance=1, description="Triage complete")
+        
+        # Step 2: Route to extractor
+        router = ExtractionRouter()
+        if strategy != 'auto':
+            # Override strategy
+            from .models.enums import StrategyType
+            doc_profile.recommended_strategy = StrategyType(strategy)
+        
+        result = router.extract(Path(document), doc_profile)
+        progress.update(task, advance=1, description="Extraction complete")
+        
+        # Step 3: Save result
+        output_dir = Path(output)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / f"{doc_profile.doc_id}.json"
+        output_path.write_text(result.to_json())
+        progress.update(task, advance=1, description="Saving complete")
+    
+    console.print(f"[green]✅ Extraction saved to:[/green] {output_path}")
+    
+    # Show summary
+    table = Table(title="Extraction Summary")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="white")
+    
+    table.add_row("Strategy", result.extraction_strategy.value)
+    table.add_row("Confidence", f"{result.confidence_score:.1%}")
+    table.add_row("Cost", f"${result.cost_usd:.4f}")
+    table.add_row("Time", f"{result.processing_time_sec:.2f}s")
+    table.add_row("Text Blocks", str(len(result.text_blocks)))
+    table.add_row("Tables", str(len(result.tables)))
+    table.add_row("Figures", str(len(result.figures)))
+    
+    console.print(table)
+
+
+@cli.command()
+def ledger():
+    """Show extraction ledger summary"""
+    from .agents.extractor import ExtractionRouter
+    
+    router = ExtractionRouter()
+    summary = router.get_ledger_summary()
+    
+    console.print("[bold]📊 Extraction Ledger Summary[/bold]")
+    console.print(f"Total Extractions: {summary['total_extractions']}")
+    console.print(f"Total Cost: ${summary['total_cost']:.4f}")
+    console.print(f"Average Confidence: {summary['avg_confidence']:.1%}")
+    
+    if summary.get('by_strategy'):
+        console.print("\nBy Strategy:")
+        for strategy, count in summary['by_strategy'].items():
+            console.print(f"  {strategy}: {count}")
+
 if __name__ == "__main__":
     cli()

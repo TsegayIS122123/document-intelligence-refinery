@@ -1,0 +1,86 @@
+{
+  "doc_id": "00c9e315653296cf",
+  "filename": "2020_Audited_Financial_Statement_Report.pdf",
+  "file_path": "data\\raw\\2020_Audited_Financial_Statement_Report.pdf",
+  "file_size_mb": 1.0310487747192383,
+  "total_pages": 3,
+  "analyzed_pages": 3,
+  "origin_type": "scanned_image",
+  "origin_confidence": 0.95,
+  "origin_signals": {
+    "avg_chars_per_page": 0.0,
+    "avg_image_ratio": 1.0,
+    "thresholds_used": {
+      "scanned_max_chars": 50,
+      "digital_min_chars": 100,
+      "scanned_min_image_ratio": 0.5,
+      "digital_max_image_ratio": 0.3
+    }
+  },
+  "avg_chars_per_page": 0.0,
+  "min_chars_per_page": 0.0,
+  "max_chars_per_page": 0.0,
+  "chars_std_dev": 0.0,
+  "avg_image_ratio": 1.0,
+  "pages_with_images": 3,
+  "total_images": 3,
+  "layout_complexity": "figure_heavy",
+  "layout_confidence": 0.7,
+  "has_tables": false,
+  "has_multi_column": false,
+  "has_figures": true,
+  "domain_hint": "financial",
+  "domain_confidence": 0.8,
+  "domain_keywords_found": {
+    "financial": 0,
+    "legal": 0,
+    "technical": 0,
+    "medical": 0,
+    "filename_hint_audit": 5,
+    "filename_hint_financial": 5
+  },
+  "language": "en",
+  "language_confidence": 0.9,
+  "recommended_strategy": "vision_augmented",
+  "recommendation_reason": "Scanned document requires vision model for OCR",
+  "estimated_cost_usd": 0.30000000000000004,
+  "processing_time_estimate_sec": 15,
+  "profile_confidence": "medium",
+  "page_details": [
+    {
+      "page_number": 1,
+      "char_count": 0,
+      "image_count": 1,
+      "image_ratio": 1.0,
+      "table_count": 0,
+      "has_text": false,
+      "likely_scanned": true,
+      "width": 595.2,
+      "height": 841.68
+    },
+    {
+      "page_number": 2,
+      "char_count": 0,
+      "image_count": 1,
+      "image_ratio": 1.0,
+      "table_count": 0,
+      "has_text": false,
+      "likely_scanned": true,
+      "width": 595.2,
+      "height": 841.68
+    },
+    {
+      "page_number": 3,
+      "char_count": 0,
+      "image_count": 1,
+      "image_ratio": 1.0,
+      "table_count": 0,
+      "has_text": false,
+      "likely_scanned": true,
+      "width": 595.2,
+      "height": 841.68
+    }
+  ],
+  "created_at": "2026-03-05T00:14:08.031681",
+  "profile_version": "1.0"
+}

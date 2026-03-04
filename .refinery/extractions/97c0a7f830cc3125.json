@@ -1,0 +1,18 @@
+{
+  "doc_id": "97c0a7f830cc3125",
+  "filename": "Audit Report - 2023.pdf",
+  "total_pages": 0,
+  "text_blocks": [],
+  "tables": [],
+  "figures": [],
+  "extraction_strategy": "vision_augmented",
+  "confidence_score": 0.0,
+  "confidence_breakdown": {},
+  "processing_time_sec": 20.992395401000977,
+  "cost_usd": 0.0,
+  "extraction_errors": [
+    "Vision error: Error code: 400 - {'error': {'message': 'google/gemini-2.0-flash-lite-preview-02-05:free is not a valid model ID', 'code': 400}, 'user_id': 'user_39yO7AHTYvRxThzaVAE1qUdODS3'}"
+  ],
+  "warnings": [],
+  "created_at": "2026-03-05T00:54:29.892742"
+}

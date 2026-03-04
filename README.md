@@ -140,6 +140,36 @@ xychart-beta
     y-axis "Cost ($)" 0 --> 10000
     bar [10000, 1000, 100, 2800]
 ```
+# 📁 Project Structure
+```bash
+document-intelligence-refinery/
+├── src/
+│   ├── agents/          # Pipeline agents
+│   │   ├── triage.py    # Document classifier
+│   │   ├── extractor.py # Strategy router
+│   │   ├── chunker.py   # Semantic chunking
+│   │   ├── indexer.py   # PageIndex builder
+│   │   └── query_agent.py # LangGraph interface
+│   ├── strategies/      # Extraction strategies
+│   │   ├── fast_text.py
+│   │   ├── layout.py
+│   │   └── vision.py
+│   ├── models/          # Pydantic schemas
+│   ├── utils/           # Helpers
+│   └── cli.py           # Command line interface
+├── tests/               # Test suite
+├── docs/                # Documentation
+├── data/                # Data directory
+├── .refinery/           # Pipeline artifacts
+│   ├── profiles/        # Document profiles
+│   ├── pageindex/       # Navigation trees
+│   └── ledger/          # Extraction logs
+├── rubric/              # Configuration
+│   └── extraction_rules.yaml
+├── .github/workflows/   # CI/CD
+├── pyproject.toml       # Project config
+└── README.md
+```
 # Phase 0: Domain Onboarding - Document Science Primer 
 **Documents Analyzed:** 4 target documents (471 total pages)  
 **Key Finding:** Character density ranges from **24 to 3,646 chars/page** - a 152x difference that enables 100% accurate document classification.
@@ -330,6 +360,169 @@ The Triage Agent estimates costs **before extraction begins**, enabling intellig
 - Real corpus testing is more valuable than synthetic assumptions  
 
 ---
+## ⚙️ Phase 2: Multi-Strategy Extraction Engine
+
+> *The ExtractionRouter acts as the intelligent foreman of the pipeline — selecting the right extraction strategy, measuring confidence, and escalating only when necessary.*
+
+---
+
+## 🎯 Three Extraction Strategies
+
+| Strategy | Tool | Cost/Page | Best For | Confidence Signals |
+|----------|------|-----------|----------|-------------------|
+| **A: FastTextExtractor** | pdfplumber | $0.001 | Simple digital documents | Character density, image ratio, font presence |
+| **B: LayoutExtractor** | Docling | $0.01 | Complex layouts, structured tables | Table structure, reading order, bounding box preservation |
+| **C: VisionExtractor** | OpenRouter (GPT-4o-mini) | $0.10 | Scanned documents, handwriting | Text reconstruction quality, structural coherence |
+
+---
+
+## 🔄 Extraction Router with Escalation Guard
+
+```mermaid
+graph TD
+    Start[Document + DocumentProfile] --> Route{Router Decision}
+    
+    Route -->|FAST_TEXT| Fast[FastTextExtractor]
+    Fast --> Check1{Confidence ≥ 0.7?}
+    Check1 -->|Yes| Accept[Accept Result]
+    Check1 -->|No| Escalate1[Escalate to Layout]
+    
+    Escalate1 --> Layout[LayoutExtractor]
+    Layout --> Check2{Confidence ≥ 0.8?}
+    Check2 -->|Yes| Accept
+    Check2 -->|No| Escalate2[Escalate to Vision]
+    
+    Escalate2 --> Vision[VisionExtractor]
+    Vision --> Check3{Confidence ≥ 0.9?}
+    Check3 -->|Yes| Accept
+    Check3 -->|No| Flag[Flag for Review]
+    
+    Accept --> Ledger[(Extraction Ledger)]
+    Flag --> Ledger
+```
+
+---
+
+## 📊 Phase 2 Results – Validated on Real Corpus
+
+| Document Class | Document | Strategy Used | Tables Found | Confidence | Cost |
+|---------------|----------|--------------|--------------|------------|------|
+| Class A | CBE Annual Report 2023-24.pdf | LayoutExtractor | 195 | 71.7% | $0.161 |
+| Class B | Audit Report - 2023.pdf | VisionExtractor | 0* | 90.0% | $0.30 |
+| Class C | fta_performance_survey_final_report_2022.pdf | LayoutExtractor | 91 | 71.7% | $0.155 |
+| Class D | tax_expenditure_ethiopia_2021_22.pdf | LayoutExtractor | 43 | 75.0% | $0.06 |
+
+\*Scanned documents contain rasterized tables (images), not machine-readable tables.
+
+---
+
+## 📋 Extraction Ledger
+
+Every extraction attempt is logged to:
+
+```
+.refinery/extraction_ledger.jsonl
+```
+
+Example entries:
+
+```json
+{"timestamp": "2026-03-04T20:40:21.320644", "doc_id": "16161f78684ef6d0", "strategy_used": "layout_aware", "confidence_score": 0.75, "cost_estimate": 0.01, "processing_time_sec": 0.91, "escalated_from": null, "error": null}
+{"timestamp": "2026-03-04T20:40:22.757895", "doc_id": "16161f78684ef6d0", "strategy_used": "vision_augmented", "confidence_score": 0.0, "cost_estimate": 0, "processing_time_sec": 0, "escalated_from": "layout_aware", "error": "Budget exceeded: $16.1 > max"}
+```
+
+The ledger provides:
+
+- Full audit trail  
+- Strategy traceability  
+- Escalation history  
+- Cost transparency  
+- Error visibility  
+
+---
+
+## 🏗️ Strategy Pattern Architecture
+
+Phase 2 implements a clean Strategy Pattern design:
+
+- All extractors inherit from `BaseExtractor`
+- Unified `ExtractedDocument` output schema
+- Router delegates based on profile signals
+- Escalation thresholds defined in YAML configuration
+- Budget guard integrated into Vision strategy
+
+---
+
+## 💡 Key Features
+
+**Shared Interface**  
+All strategies implement the same contract via `BaseExtractor`.
+
+**Multi-Signal Confidence Scoring**  
+FastText combines:
+- Character count
+- Character density
+- Image ratio
+- Font presence
+
+**Adapter Pattern (LayoutExtractor)**  
+Docling output is normalized into a unified `ExtractedDocument` schema.
+
+**Budget Guard (VisionExtractor)**  
+- Tracks estimated token usage  
+- Enforces configurable spending caps  
+- Prevents runaway vision costs  
+
+**Escalation Logic**  
+Router escalates from low-cost to high-cost strategies only when confidence thresholds are not met.
+
+**Extraction Ledger**  
+Every attempt is logged with:
+- Strategy used
+- Confidence score
+- Cost estimate
+- Escalation source
+- Processing time
+- Errors (if any)
+
+**Externalized Configuration**  
+Thresholds and limits defined in YAML for flexibility and scalability.
+
+---
+
+## 🧪 Unit & Integration Tests
+
+```bash
+# FastTextExtractor validation
+pytest tests/test_phase2.py -v
+
+# Full router with escalation
+python tests/test_router.py
+# Extract a single document
+refinery-extract "data/raw/Audit Report - 2023.pdf"
+
+```
+
+Validated outcomes:
+
+- 91 tables extracted from Class C document
+- 195 tables extracted from Class A document
+- 90% confidence on scanned audit document
+- Escalation guard functioning as designed
+
+---
+
+## 🏆 Phase 2 Summary
+
+- Three distinct extraction strategies implemented
+- Strategy Pattern architecture with shared interface
+- Confidence-based escalation guard
+- Multi-signal scoring for digital documents
+- Budget enforcement for vision models
+- Full extraction ledger with audit trail
+- Real corpus validation across multiple document classes
+
+Phase 2 transforms the system from a classifier into a fully operational, cost-aware, multi-strategy extraction engine.
     
 ## 🚀 Quick Start
 
@@ -400,37 +593,6 @@ The FDE Mindset
 - PageIndex for hierarchical navigation
 
 - Provenance chains for verification
-
-# 📁 Project Structure
-```bash
-document-intelligence-refinery/
-├── src/
-│   ├── agents/          # Pipeline agents
-│   │   ├── triage.py    # Document classifier
-│   │   ├── extractor.py # Strategy router
-│   │   ├── chunker.py   # Semantic chunking
-│   │   ├── indexer.py   # PageIndex builder
-│   │   └── query_agent.py # LangGraph interface
-│   ├── strategies/      # Extraction strategies
-│   │   ├── fast_text.py
-│   │   ├── layout.py
-│   │   └── vision.py
-│   ├── models/          # Pydantic schemas
-│   ├── utils/           # Helpers
-│   └── cli.py           # Command line interface
-├── tests/               # Test suite
-├── docs/                # Documentation
-├── data/                # Data directory
-├── .refinery/           # Pipeline artifacts
-│   ├── profiles/        # Document profiles
-│   ├── pageindex/       # Navigation trees
-│   └── ledger/          # Extraction logs
-├── rubric/              # Configuration
-│   └── extraction_rules.yaml
-├── .github/workflows/   # CI/CD
-├── pyproject.toml       # Project config
-└── README.md
-```
 
 # 🛠️ Development
 ```bash

@@ -1,0 +1,106 @@
+{
+  "doc_id": "8f082794c3e5f568",
+  "filename": "Annual_Report_JUNE-2017.pdf",
+  "file_path": "data\\raw\\Annual_Report_JUNE-2017.pdf",
+  "file_size_mb": 20.21031379699707,
+  "total_pages": 104,
+  "analyzed_pages": 5,
+  "origin_type": "native_digital",
+  "origin_confidence": 0.9,
+  "origin_signals": {
+    "avg_chars_per_page": 360.6,
+    "avg_image_ratio": 0.15002868353891508,
+    "thresholds_used": {
+      "scanned_max_chars": 50,
+      "digital_min_chars": 100,
+      "scanned_min_image_ratio": 0.5,
+      "digital_max_image_ratio": 0.3
+    }
+  },
+  "avg_chars_per_page": 360.6,
+  "min_chars_per_page": 33.0,
+  "max_chars_per_page": 736.0,
+  "chars_std_dev": 299.24454882253076,
+  "avg_image_ratio": 0.15002868353891508,
+  "pages_with_images": 1,
+  "total_images": 1,
+  "layout_complexity": "mixed",
+  "layout_confidence": 0.85,
+  "has_tables": true,
+  "has_multi_column": true,
+  "has_figures": true,
+  "domain_hint": "general",
+  "domain_confidence": 0.5,
+  "domain_keywords_found": {
+    "financial": 0,
+    "legal": 0,
+    "technical": 0,
+    "medical": 0
+  },
+  "language": "en",
+  "language_confidence": 0.9,
+  "recommended_strategy": "layout_aware",
+  "recommendation_reason": "Complex layout (mixed) needs structure preservation",
+  "estimated_cost_usd": 1.04,
+  "processing_time_estimate_sec": 208,
+  "profile_confidence": "medium",
+  "page_details": [
+    {
+      "page_number": 1,
+      "char_count": 33,
+      "image_count": 0,
+      "image_ratio": 0.0,
+      "table_count": 2,
+      "has_text": false,
+      "likely_scanned": false,
+      "width": 581.102,
+      "height": 751.181
+    },
+    {
+      "page_number": 2,
+      "char_count": 81,
+      "image_count": 1,
+      "image_ratio": 0.75,
+      "table_count": 1,
+      "has_text": true,
+      "likely_scanned": false,
+      "width": 581.102,
+      "height": 751.181
+    },
+    {
+      "page_number": 3,
+      "char_count": 427,
+      "image_count": 0,
+      "image_ratio": 0.0,
+      "table_count": 1,
+      "has_text": true,
+      "likely_scanned": false,
+      "width": 581.102,
+      "height": 751.181
+    },
+    {
+      "page_number": 4,
+      "char_count": 526,
+      "image_count": 0,
+      "image_ratio": 0.0,
+      "table_count": 3,
+      "has_text": true,
+      "likely_scanned": false,
+      "width": 581.102,
+      "height": 751.181
+    },
+    {
+      "page_number": 5,
+      "char_count": 736,
+      "image_count": 0,
+      "image_ratio": 0.0,
+      "table_count": 11,
+      "has_text": true,
+      "likely_scanned": false,
+      "width": 581.102,
+      "height": 751.181
+    }
+  ],
+  "created_at": "2026-03-05T00:14:15.212747",
+  "profile_version": "1.0"
+}
