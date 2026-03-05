@@ -523,6 +523,156 @@ Validated outcomes:
 - Real corpus validation across multiple document classes
 
 Phase 2 transforms the system from a classifier into a fully operational, cost-aware, multi-strategy extraction engine.
+## 🧠 Phase 3: Semantic Chunking Engine & PageIndex
+
+> *"Transforming raw extraction into RAG-optimized, navigable knowledge with 5 enforceable constitutional rules."*
+
+
+Phase 3 transforms extracted documents into structured, retrieval-ready semantic units using a rule-based chunking system and hierarchical navigation index.
+
+The goal of this phase is to convert raw extraction output into logically structured knowledge blocks that can support accurate Retrieval Augmented Generation (RAG).
+
+---
+
+### The Five Constitutional Chunking Rules
+
+```mermaid
+graph TD
+    A[Extracted Document] --> B[Chunking Engine]
+
+    B --> R1[Rule 1: No Table Splitting]
+    B --> R2[Rule 2: Figure Caption Binding]
+    B --> R3[Rule 3: List Preservation]
+    B --> R4[Rule 4: Section Hierarchy]
+    B --> R5[Rule 5: Cross Reference Resolution]
+
+    R1 --> V[ChunkValidator]
+    R2 --> V
+    R3 --> V
+    R4 --> V
+    R5 --> V
+
+    V --> C[Validated Semantic Chunks]
+```
+
+---
+
+### Chunking Pipeline
+
+```mermaid
+graph LR
+    A[Extracted Document] --> B[Chunking Engine]
+    B --> C[Chunk Validator]
+    C --> D[Semantic Chunks]
+    D --> E[PageIndex Builder]
+    E --> F[Vector Store]
+    F --> G[PageIndex Querier]
+```
+
+---
+
+### Key Features
+
+#### Rule-Based Chunking
+
+The system enforces five structural rules ensuring logical document segmentation:
+
+1. **No Table Splitting**  
+   Table headers and rows remain together within a single chunk.
+
+2. **Figure-Caption Binding**  
+   Figure captions are stored as metadata for the associated figure.
+
+3. **List Preservation**  
+   Lists remain intact if the combined token count is within the chunk limit.
+
+4. **Section Hierarchy**  
+   Each chunk stores references to its parent section.
+
+5. **Cross-Reference Resolution**  
+   References such as “see Table 3” are converted into navigable links.
+
+---
+
+#### Chunk Validation
+
+Before any chunk is emitted, the `ChunkValidator` verifies that all rules are satisfied.
+
+If any rule fails, the chunk is rejected to preserve structural integrity.
+
+---
+
+#### Spatial Hashing for Provenance
+
+Each chunk receives an immutable hash derived from its:
+
+- content
+- page number
+- bounding box location
+
+Example:
+
+```python
+hash = hasher.generate_content_hash(
+    text="Revenue: $45.2M",
+    page_num=42,
+    bbox=(10, 50, 600, 150)
+)
+```
+
+This ensures that any change to content or position generates a different identifier.
+
+---
+
+#### PageIndex Navigation
+
+The PageIndex provides a hierarchical navigation layer across document sections.
+
+Instead of performing a full vector search immediately, the system first narrows the search scope to relevant sections.
+
+Example workflow:
+
+```python
+sections = indexer.navigate("revenue growth", top_k=3)
+results = vector_store.search(query, filter={"section": sections})
+```
+
+This approach improves retrieval efficiency and contextual relevance.
+
+---
+
+### Phase 3 Test Results
+
+```
+pytest tests/test_chunking.py -v
+```
+
+Output:
+
+```
+collected 6 items
+tests/test_chunking.py ...... [100%]
+6 passed
+```
+
+| Test | Description |
+|-----|-------------|
+| test_rule_1_no_table_split | Tables remain intact |
+| test_rule_2_figure_caption_linked | Captions bound to figures |
+| test_rule_3_list_preservation | Lists remain grouped |
+| test_rule_4_section_hierarchy | Parent section maintained |
+| test_rule_5_cross_reference_resolved | References resolved |
+| test_content_hash_validation | Spatial hashing validated |
+
+
+---
+
+### Phase 3 Outcome
+
+Phase 3 successfully introduces structured semantic chunking and hierarchical document navigation.
+
+The pipeline now produces validated semantic chunks, maintains structural relationships between document elements, and enables efficient retrieval through PageIndex navigation combined with vector search.
+
     
 ## 🚀 Quick Start
 
