@@ -171,6 +171,132 @@ def extract(document, profile, strategy, output):
     table.add_row("Figures", str(len(result.figures)))
     
     console.print(table)
+@cli.command()
+@click.argument('query')
+@click.option('--doc-id', help='Document ID to query (optional)')
+@click.option('--audit/--no-audit', default=False, help='Run in audit mode')
+def query(query, doc_id, audit):
+    """Query documents with provenance tracking"""
+    
+    from src.agents.query_agent import QueryAgent
+    from src.utils.vector_store import VectorStore
+    from src.utils.fact_extractor import FactExtractor
+    from src.queries.audit_mode import AuditMode
+    
+    console.print(f"[bold cyan]🔍 Query:[/bold cyan] {query}")
+    
+    with Progress() as progress:
+        task = progress.add_task("Searching...", total=3)
+        
+        # Initialize components
+        vector_store = VectorStore()
+        fact_extractor = FactExtractor()
+        progress.update(task, advance=1, description="Loading indices")
+        
+        if audit:
+            # Audit mode
+            auditor = AuditMode(vector_store, fact_extractor)
+            result = auditor.verify_claim(query, doc_id)
+            progress.update(task, advance=2, description="Verifying")
+            
+            # Display result
+            console.print("\n[bold]🔎 Audit Result:[/bold]")
+            console.print(result.to_markdown())
+            
+        else:
+            # Query mode
+            agent = QueryAgent(vector_store, fact_extractor)
+            result = agent.query(query)
+            progress.update(task, advance=2, description="Querying")
+            
+            # Display result
+            console.print(f"\n[bold]💬 Answer:[/bold] {result.synthesized_answer}")
+            console.print(f"[dim]Confidence: {result.confidence:.1%}[/dim]")
+            
+            if result.sources:
+                console.print("\n[bold]📚 Sources:[/bold]")
+                table = Table()
+                table.add_column("#", style="dim")
+                table.add_column("Document", style="cyan")
+                table.add_column("Page", style="green")
+                table.add_column("Text", style="white")
+                
+                for i, src in enumerate(result.sources[:3], 1):
+                    table.add_row(
+                        str(i),
+                        src.document_name[:30] + "..." if len(src.document_name) > 30 else src.document_name,
+                        str(src.page_number),
+                        src.extracted_text[:50] + "..." if src.extracted_text else ""
+                    )
+                console.print(table)
+    
+    console.print(f"[green]✅ Query complete (ID: {result.query_id})[/green]")
+
+
+@cli.command()
+@click.argument('doc-id')
+def audit_report(doc_id):
+    """Generate audit report for a document"""
+    
+    from src.queries.audit_mode import AuditMode
+    from src.utils.vector_store import VectorStore
+    from src.utils.fact_extractor import FactExtractor
+    
+    console.print(f"[bold]📋 Generating audit report for document: {doc_id}[/bold]")
+    
+    vector_store = VectorStore()
+    fact_extractor = FactExtractor()
+    auditor = AuditMode(vector_store, fact_extractor)
+    
+    report = auditor.audit_report(doc_id)
+    
+    # Display report
+    console.print(f"\n[bold]Document:[/bold] {report['document']['filename']}")
+    console.print(f"[bold]Total Facts:[/bold] {report['facts']['total_facts']}")
+    
+    if report['facts']['by_type']:
+        console.print("\n[bold]Facts by type:[/bold]")
+        for fact_type, stats in report['facts']['by_type'].items():
+            console.print(f"  • {fact_type}: {stats['count']} (confidence: {stats['avg_confidence']:.1%})")
+    
+    if report['recent_queries']:
+        console.print("\n[bold]Recent queries:[/bold]")
+        for q in report['recent_queries'][:5]:
+            console.print(f"  • {q['query']} ({q['timestamp'][:10]})")
+    
+    console.print(f"\n[green]✅ Audit report generated[/green]")
+
+
+@cli.command()
+def history():
+    """Show query history"""
+    
+    from src.utils.sqlite_store import SQLiteStore
+    
+    store = SQLiteStore()
+    history = store.get_query_history(limit=20)
+    
+    if not history:
+        console.print("[yellow]No query history found[/yellow]")
+        return
+    
+    table = Table(title="Query History")
+    table.add_column("Time", style="dim")
+    table.add_column("Query", style="cyan")
+    table.add_column("Confidence", style="green")
+    table.add_column("Status", style="yellow")
+    table.add_column("Sources", style="blue")
+    
+    for entry in history:
+        table.add_row(
+            entry['timestamp'][:16],
+            entry['query'][:40] + "..." if len(entry['query']) > 40 else entry['query'],
+            f"{entry['confidence']:.1%}",
+            entry['verification_status'],
+            str(entry['source_count'])
+        )
+    
+    console.print(table)
 
 
 @cli.command()
