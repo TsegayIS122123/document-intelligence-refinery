@@ -82,24 +82,17 @@ class VectorStore:
         self.vectors = []
         self.metadata = []
     
-    def add_chunks(
-        self,
-        chunks: List[Dict],
-        embeddings: Optional[List[List[float]]] = None
-    ):
+    def add_chunks(self, chunks: List[Dict], embeddings: Optional[List[List[float]]] = None):
         """
-        Add chunks to vector store.
-        
-        Args:
-            chunks: List of chunk dictionaries (must have 'id', 'content')
-            embeddings: Optional pre-computed embeddings
+        Add chunks to vector store based on store_type.
         """
         if self.store_type == "chroma" and CHROMA_AVAILABLE:
             self._add_chromadb(chunks, embeddings)
         elif self.store_type == "faiss" and FAISS_AVAILABLE:
             self._add_faiss(chunks, embeddings)
         else:
-            self._add_dict(chunks, embeddings)
+            # For dict store or fallback
+            self._add_dict(chunks, embeddings)  # ← This should be called for dict store!
     
     def _add_chromadb(self, chunks: List[Dict], embeddings: Optional[List[List[float]]] = None):
         """Add to ChromaDB"""
@@ -145,12 +138,30 @@ class VectorStore:
     
     def _add_dict(self, chunks: List[Dict], embeddings: Optional[List[List[float]]] = None):
         """Add to in-memory dict"""
-        if embeddings is None:
-            embeddings = [np.random.randn(384).astype('float32') for _ in chunks]
+        import numpy as np
         
-        for emb, chunk in zip(embeddings, chunks):
-            self.vectors.append(emb)
-            self.metadata.append(chunk)
+        for i, chunk in enumerate(chunks):
+            if embeddings and i < len(embeddings):
+                vec = np.array(embeddings[i]).astype('float32')
+            else:
+                # Generate a deterministic vector based on content
+                seed = hash(chunk.get('content', '')) % 10000
+                np.random.seed(seed)
+                vec = np.random.randn(384).astype('float32')
+            
+            self.vectors.append(vec)
+            
+            # Make sure ALL metadata is preserved
+            metadata = chunk.copy()
+            # Ensure page_num is set correctly
+            if 'primary_page' in chunk:
+                metadata['page_num'] = chunk['primary_page']
+            elif 'page_num' not in metadata:
+                metadata['page_num'] = 1
+                
+            self.metadata.append(metadata)
+        
+        print(f"✅ Added {len(chunks)} chunks to dict store with {len(self.vectors)} vectors")
     
     def search(
         self,
@@ -240,38 +251,45 @@ class VectorStore:
         return results
     
     def _search_dict(self, embedding: Optional[List[float]], 
-                     filter: Optional[Dict], top_k: int) -> List[Dict]:
+                    filter: Optional[Dict], top_k: int) -> List[Dict]:
         """Search in-memory dict (linear scan)"""
         if embedding is None or not self.vectors:
+            print(f"⚠️ No vectors to search (vectors: {len(self.vectors)})")
             return []
         
-        # Simple cosine similarity
+        import numpy as np
         query_vec = np.array(embedding)
         scores = []
         
-        for i, vec in enumerate(self.vectors):
-            # Apply filter
-            if filter:
-                metadata = self.metadata[i]
-                if filter.get('page_num') and metadata['primary_page'] != filter['page_num']:
-                    continue
-            
-            # Cosine similarity
-            sim = np.dot(query_vec, vec) / (np.linalg.norm(query_vec) * np.linalg.norm(vec))
-            scores.append((i, sim))
+        print(f"🔍 Searching {len(self.vectors)} vectors with top_k={top_k}")
         
-        # Sort and return top_k
+        for i, vec in enumerate(self.vectors):
+            # Skip if no vector
+            if vec is None:
+                continue
+                
+            # Calculate cosine similarity
+            try:
+                sim = np.dot(query_vec, vec) / (np.linalg.norm(query_vec) * np.linalg.norm(vec))
+                scores.append((i, float(sim)))
+            except Exception as e:
+                print(f"⚠️ Error calculating similarity for vector {i}: {e}")
+        
+        # Sort by similarity (highest first)
         scores.sort(key=lambda x: x[1], reverse=True)
         
+        # Return top_k
         results = []
         for i, score in scores[:top_k]:
-            results.append({
-                'id': self.metadata[i]['ldu_id'],
-                'content': self.metadata[i]['content'],
-                'metadata': self.metadata[i],
-                'score': float(score)
-            })
+            if i < len(self.metadata):
+                results.append({
+                    'id': self.metadata[i].get('id', f'chunk_{i}'),
+                    'content': self.metadata[i].get('content', ''),
+                    'metadata': self.metadata[i],
+                    'score': score
+                })
         
+        print(f"✅ Found {len(results)} results")
         return results
     
     def delete_document(self, doc_id: str):

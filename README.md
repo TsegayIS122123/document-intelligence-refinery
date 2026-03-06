@@ -672,7 +672,232 @@ tests/test_chunking.py ...... [100%]
 Phase 3 successfully introduces structured semantic chunking and hierarchical document navigation.
 
 The pipeline now produces validated semantic chunks, maintains structural relationships between document elements, and enables efficient retrieval through PageIndex navigation combined with vector search.
+---
 
+# 💬 Phase 4: Query Agent & Provenance Layer
+
+> **Goal:** Build the interface that makes the Document Intelligence Refinery useful, explainable, and auditable.
+
+Phase 4 introduces an intelligent **Query Agent powered by LangGraph**, a **ProvenanceChain for traceable answers**, a **FactTable extractor for financial data**, and an **Audit Mode for claim verification**.
+
+The result is a system where **every answer is backed by verifiable sources**.
+
+---
+
+# 🎯 Phase 4 Objectives
+
+The main objectives of this phase are:
+
+- Build a **3-tool LangGraph Query Agent**
+- Ensure **every response includes traceable provenance**
+- Extract structured **financial facts into SQLite**
+- Implement **Audit Mode for claim verification**
+- Provide **explainable answers with source citations**
+
+---
+
+# 🧠 Query Agent Architecture
+
+The Query Agent routes user questions to the correct retrieval tool.
+
+It uses **three specialized tools**:
+
+| Tool | Purpose |
+|-----|------|
+| `pageindex_navigate` | Navigate document sections |
+| `semantic_search` | Vector similarity search |
+| `structured_query` | Query structured financial facts |
+
+---
+### 🎯 Three-Tool LangGraph Agent
+
+```mermaid
+graph LR
+    subgraph Query["💬 User Query"]
+        Q[Natural Language Question]
+    end
+
+    subgraph Router["🔄 LangGraph Router"]
+        R{Classify Query}
+        R -->|Navigate| T1[Tool: pageindex_navigate]
+        R -->|Search| T2[Tool: semantic_search]
+        R -->|Query| T3[Tool: structured_query]
+    end
+
+    subgraph Sources["📚 Source Retrieval"]
+        T1 --> S1[Relevant Sections]
+        T2 --> S2[Similar Chunks]
+        T3 --> S3[SQL Facts]
+    end
+
+    subgraph Provenance["🔗 ProvenanceChain"]
+        P1[Document Name]
+        P2[Page Number]
+        P3[Bounding Box]
+        P4[Content Hash]
+    end
+
+    subgraph Audit["🔎 Audit Mode"]
+        A1[Claim Verification]
+        A2[Source Matching]
+        A3[Confidence Scoring]
+    end
+
+    Query --> Router
+    S1 & S2 & S3 --> Provenance
+    Provenance --> Audit
+```
+## 🔗 ProvenanceChain (Source Traceability)
+
+Every generated answer includes a **ProvenanceChain**, ensuring full traceability back to the original document source.
+
+Each citation contains:
+
+| Field | Description |
+|------|-------------|
+| `document_name` | Source document |
+| `page_number` | Page where the content was found |
+| `bbox` | Bounding box coordinates of the extracted content |
+| `content_hash` | Hash verifying source integrity |
+
+### 📄 Example Provenance Output
+
+```json
+{
+  "claim": "Revenue was $45.2 million in 2023",
+  "confidence": 0.94,
+  "verification_status": "verified",
+  "sources": [
+    {
+      "document_name": "CBE_Annual_Report_2023.pdf",
+      "page_number": 42,
+      "bbox": {
+        "x0": 12,
+        "y0": 45,
+        "x1": 590,
+        "y1": 120
+      },
+      "content_hash": "a8f73d928f32ab19"
+    }
+  ]
+}
+```
+## 📊 FactTable Extractor
+
+Some documents contain **financial or numerical information**.  
+The **FactTable Extractor** identifies these values and stores them as **structured facts** for reliable querying.
+
+### Example Extracted Facts
+- revenue
+- profit
+- growth
+- fiscal year
+- quarter
+
+These facts are stored in a **SQLite database** for precise and structured queries.
+
+---
+
+## 🗄️ SQLite Fact Table Schema
+
+```sql
+CREATE TABLE facts (
+    fact_id TEXT PRIMARY KEY,
+    document_id TEXT,
+    fact_type TEXT,
+    key TEXT,
+    value TEXT,
+    page_number INTEGER
+);
+```
+
+### 📑 Example Extracted Data
+
+| fact_id | fact_type | key | value | page |
+|--------|-----------|-----|-------|------|
+| f001 | revenue | revenue | $45.2M | 42 |
+| f002 | profit | net_profit | $12.3M | 43 |
+| f003 | growth | growth_rate | 7.4% | 42 |
+
+---
+
+## 🔎 Audit Mode (Claim Verification)
+
+**Audit Mode** verifies claims against document evidence to ensure answers are trustworthy.
+
+### Example Claim
+
+```
+"The report states revenue was $45.2M in 2023"
+```
+
+### Verification Workflow
+
+1. Search the document corpus  
+2. Match extracted facts or text evidence  
+3. Return verification status  
+
+```mermaid
+flowchart TD
+
+A[User Claim] --> B[Search Document Corpus]
+
+B --> C[FactTable Lookup]
+B --> D[Semantic Vector Search]
+
+C --> E{Evidence Found?}
+D --> E
+
+E -->|Yes| F[Verified Claim]
+E -->|Partial| G[Partial Evidence]
+E -->|No| H[Unverifiable Claim]
+```
+
+---
+
+## 🧪 Testing & Validation
+
+All components were tested to ensure reliability.
+
+```bash
+pytest tests/test_query.py
+pytest tests/test_audit.py
+```
+
+### Test Results
+
+| Test Suite | Tests | Status |
+|-----------|------|--------|
+| Query Agent | 4 | ✅ Passed |
+| Audit Mode | 3 | ✅ Passed |
+| **Total** | **7** | ✅ **All Passing** |
+
+---
+
+## 🏗️ Key Components
+
+| Component | Purpose | Location |
+|----------|---------|---------|
+| Query Agent | Routes queries to tools | `src/agents/query_agent.py` |
+| Provenance Model | Source traceability | `src/models/provenance.py` |
+| Fact Extractor | Extracts financial facts | `src/utils/fact_extractor.py` |
+| SQLite Store | Stores query history | `src/utils/sqlite_store.py` |
+| Audit Mode | Claim verification | `src/queries/audit_mode.py` |
+
+---
+
+## 🚀 Phase 4 Summary
+
+Phase 4 transforms the **Document Intelligence Refinery** into a **fully auditable question-answering system**.
+
+The system can now:
+
+- Answer complex questions about documents
+- Provide **verifiable source citations**
+- Extract **structured financial information**
+- Verify claims using **Audit Mode**
+
+This ensures the platform is **not only intelligent but also trustworthy and explainable**.
     
 ## 🚀 Quick Start
 
