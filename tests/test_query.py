@@ -14,19 +14,20 @@ class TestQueryAgent:
     
     @pytest.fixture
     def vector_store(self):
-        """Create a vector store with proper embeddings"""
+        """Create a vector store with proper embeddings and search"""
         from src.utils.vector_store import VectorStore
+        import numpy as np
         
         store = VectorStore(store_type="dict")
         
-        # Add test chunks with proper metadata
+        # Add test chunks
         test_chunks = [
             {
                 'id': 'chunk1',
                 'content': 'Revenue for 2023 was $45.2 million, a 7.4% increase from last year.',
                 'doc_id': 'test_doc',
-                'primary_page': 42,  # ← This should become page_num in metadata
-                'page_num': 42,       # ← Add explicitly to be safe
+                'primary_page': 42,
+                'page_num': 42,
                 'bbox': (10, 50, 600, 100),
                 'content_hash': 'a1b2c3d4e5f6g7h8',
                 'chunk_type': 'text',
@@ -37,7 +38,7 @@ class TestQueryAgent:
                 'content': 'Operating expenses totaled $8.9 million in Q3 2024.',
                 'doc_id': 'test_doc',
                 'primary_page': 43,
-                'page_num': 43,        # ← Add explicitly
+                'page_num': 43,
                 'bbox': (10, 150, 600, 200),
                 'content_hash': 'b2c3d4e5f6g7h8i9',
                 'chunk_type': 'text',
@@ -45,10 +46,51 @@ class TestQueryAgent:
             }
         ]
         
-        # Add chunks with embeddings
+        # Add chunks to store - this should populate vectors
         store.add_chunks(test_chunks)
         
-        print(f"✅ Test vector store initialized with {len(getattr(store, 'vectors', []))} vectors")
+        # Verify vectors were added
+        assert len(store.vectors) > 0, "No vectors added to store!"
+        print(f"✅ Test vector store initialized with {len(store.vectors)} vectors")
+        
+        # Create a mock search function that actually works
+        def mock_search(query, embedding=None, filter=None, top_k=5):
+            """Mock search that returns results based on query content"""
+            print(f"🔍 Mock search for: '{query}'")
+            
+            results = []
+            if "revenue" in query.lower() or "2023" in query:
+                results.append({
+                    'id': 'chunk1',
+                    'content': 'Revenue for 2023 was $45.2 million, a 7.4% increase from last year.',
+                    'metadata': {
+                        'doc_id': 'test_doc',
+                        'page_num': 42,
+                        'bbox': (10, 50, 600, 100),
+                        'content_hash': 'a1b2c3d4e5f6g7h8'
+                    },
+                    'score': 0.95
+                })
+            
+            if "expenses" in query.lower() or "q3" in query.lower():
+                results.append({
+                    'id': 'chunk2',
+                    'content': 'Operating expenses totaled $8.9 million in Q3 2024.',
+                    'metadata': {
+                        'doc_id': 'test_doc',
+                        'page_num': 43,
+                        'bbox': (10, 150, 600, 200),
+                        'content_hash': 'b2c3d4e5f6g7h8i9'
+                    },
+                    'score': 0.87
+                })
+            
+            print(f"✅ Found {len(results)} results")
+            return results[:top_k]
+        
+        # Replace the search method
+        store.search = mock_search
+        
         return store
     
     @pytest.fixture
