@@ -6,10 +6,10 @@ Enables LLM to traverse document without reading everything.
 import hashlib
 import os
 import time
-from typing import List, Dict, Any, Optional, Tuple
-from collections import defaultdict
 import json
 from pathlib import Path
+from typing import List, Dict, Any, Optional, Tuple
+from collections import defaultdict
 
 from ..models.chunking import LDU, ChunkType
 from ..models.document import PageIndex, PageIndexNode
@@ -33,14 +33,14 @@ class PageIndexBuilder:
     def __init__(self, llm_client=None, use_llm: bool = True):
         """
         Initialize PageIndexBuilder.
-        
+
         Args:
             llm_client: Optional LLM client (will create if not provided)
             use_llm: Whether to use LLM for summaries (falls back to rule-based)
         """
         self.use_llm = use_llm and LLM_AVAILABLE
         self.sections = defaultdict(list)  # section_path -> chunks
-        
+
         # Initialize LLM client if requested
         if self.use_llm:
             if llm_client:
@@ -61,9 +61,10 @@ class PageIndexBuilder:
         else:
             self.llm = None
 
-    def build(self, chunks: List[LDU], doc_id: str, filename: str) -> PageIndex:
+    def build(self, chunks: List[LDU], doc_id: str, filename: str, 
+              save: bool = True, output_dir: str = ".refinery/pageindex") -> PageIndex:
         """
-        Build PageIndex from chunks.
+        Build PageIndex from chunks and optionally save to disk.
 
         Steps:
         1. Extract section hierarchy from chunks
@@ -71,6 +72,17 @@ class PageIndexBuilder:
         3. Generate summaries for each section (LLM or rule-based)
         4. Extract key entities
         5. Build navigation tree
+        6. Save to disk (optional)
+
+        Args:
+            chunks: List of LDUs
+            doc_id: Document ID
+            filename: Original filename
+            save: Whether to save to disk
+            output_dir: Directory to save (configurable)
+
+        Returns:
+            PageIndex object
         """
         # Reset
         self.sections = defaultdict(list)
@@ -95,16 +107,22 @@ class PageIndexBuilder:
             default=0
         )
 
-        return PageIndex(
+        pageindex = PageIndex(
             doc_id=doc_id,
             filename=filename,
             root_sections=root_sections,
             total_pages=total_pages
         )
+        
+        # Save to disk if requested
+        if save:
+            self.save(pageindex, output_dir)
+        
+        return pageindex
 
     def _build_tree(self, section_path: str, all_chunks: List[LDU]) -> List[PageIndexNode]:
         """
-        Recursively build section tree.
+        Recursively build section tree with all required attributes.
         """
         nodes = []
 
@@ -139,16 +157,22 @@ class PageIndexBuilder:
             child_section_path = section_title
             child_nodes = self._build_tree(child_section_path, all_chunks)
 
-            # Create node
+            # Extract key entities from this section
+            key_entities = self._extract_entities_from_chunks(section_chunks)
+            
+            # Get data types present
+            data_types = self._get_data_types(section_chunks)
+
+            # Create node with all attributes populated
             node = PageIndexNode(
                 id=f"section_{hashlib.md5(section_title.encode()).hexdigest()[:8]}",
                 title=section_title,
                 page_start=page_start,
                 page_end=page_end,
                 child_sections=child_nodes,
-                key_entities=[],  # Will be filled later
-                summary=None,  # Will be filled later
-                data_types_present=self._get_data_types(section_chunks)
+                key_entities=key_entities,  # Now populated
+                summary=None,  # Will be filled later in _generate_summaries
+                data_types_present=data_types  # Now populated
             )
             nodes.append(node)
 
@@ -205,17 +229,18 @@ class PageIndexBuilder:
                 if chunk.chunk_type == ChunkType.TEXT:
                     content_samples.append(chunk.content[:200])
                 elif chunk.chunk_type == ChunkType.TABLE:
-                    content_samples.append(f"[Table: {chunk.metadata.get('headers', ['Table'])[0]}]")
+                    headers = chunk.metadata.get('headers', ['Table'])
+                    content_samples.append(f"[Table: {headers[0] if headers else 'Table'}]")
                 elif chunk.chunk_type == ChunkType.FIGURE:
                     content_samples.append(f"[Figure: {chunk.metadata.get('caption', 'Figure')}]")
-            
+
             sample_text = ' '.join(content_samples)
-            
+
             # Count types for context
             type_counts = defaultdict(int)
             for chunk in chunks:
                 type_counts[chunk.chunk_type.value] += 1
-            
+
             type_summary = ', '.join(f"{count} {type}" for type, count in type_counts.items())
 
             # Call LLM (using cheap model)
@@ -234,10 +259,10 @@ class PageIndexBuilder:
                 max_tokens=100,
                 temperature=0.3
             )
-            
+
             summary = response.choices[0].message.content.strip()
             return summary
-            
+
         except Exception as e:
             print(f"⚠️ LLM summary failed: {e}. Using rule-based fallback.")
             return self._create_rule_based_summary(title, chunks)
@@ -267,10 +292,30 @@ class PageIndexBuilder:
 
         return " | ".join(summary_parts)
 
+    def _extract_entities_from_chunks(self, chunks: List[LDU]) -> List[str]:
+        """
+        Extract key entities from section chunks.
+        """
+        entities = set()
+        
+        # Look for capitalized phrases (potential named entities)
+        for chunk in chunks:
+            if chunk.chunk_type in [ChunkType.TEXT, ChunkType.SECTION_HEADER]:
+                words = chunk.content.split()
+                for i in range(len(words) - 1):
+                    # Two consecutive capitalized words
+                    if len(words[i]) > 1 and words[i][0].isupper() and \
+                       len(words[i+1]) > 1 and words[i+1][0].isupper():
+                        entities.add(f"{words[i]} {words[i+1]}")
+                    # Single capitalized word (longer than 3 chars)
+                    elif words[i][0].isupper() and len(words[i]) > 3:
+                        entities.add(words[i])
+        
+        return list(entities)[:10]  # Limit to 10 entities per section
+
     def _extract_entities(self, nodes: List[PageIndexNode], all_chunks: List[LDU]):
         """
         Extract key entities from section chunks.
-        Simple rule-based extraction (can be enhanced with NER).
         """
         for node in nodes:
             # Get chunks in this section
@@ -278,23 +323,58 @@ class PageIndexBuilder:
                 c for c in all_chunks
                 if c.parent_section == node.title
             ]
-
-            # Extract potential entities
-            entities = set()
-
-            # Look for capitalized phrases
-            for chunk in section_chunks:
-                words = chunk.content.split()
-                for i in range(len(words) - 1):
-                    if words[i][0].isupper() and words[i+1][0].isupper():
-                        entities.add(f"{words[i]} {words[i+1]}")
-                    elif words[i][0].isupper() and len(words[i]) > 3:
-                        entities.add(words[i])
-
-            node.key_entities = list(entities)[:10]  # Limit to 10
-
+            
+            # Extract entities using the helper method
+            node.key_entities = self._extract_entities_from_chunks(section_chunks)
+            
             # Recursively process children
             self._extract_entities(node.child_sections, all_chunks)
+
+    def save(self, pageindex: PageIndex, output_dir: str = ".refinery/pageindex") -> Path:
+        """
+        Serialize PageIndex to JSON at configurable output path.
+
+        Args:
+            pageindex: The PageIndex object to save
+            output_dir: Directory to save the JSON file (configurable)
+
+        Returns:
+            Path to the saved JSON file
+        """
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Create filename based on doc_id
+        file_path = output_path / f"{pageindex.doc_id}.json"
+
+        # Convert to JSON and save
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(pageindex.model_dump_json(indent=2))
+
+        print(f"✅ PageIndex saved to: {file_path}")
+        return file_path
+
+    def load(self, doc_id: str, input_dir: str = ".refinery/pageindex") -> Optional[PageIndex]:
+        """
+        Load PageIndex from JSON file.
+
+        Args:
+            doc_id: Document ID to load
+            input_dir: Directory containing the JSON files
+
+        Returns:
+            PageIndex object or None if not found
+        """
+        file_path = Path(input_dir) / f"{doc_id}.json"
+
+        if not file_path.exists():
+            print(f"⚠️ PageIndex not found: {file_path}")
+            return None
+
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        return PageIndex(**data)
 
 
 class PageIndexQuerier:
@@ -370,17 +450,27 @@ class PageIndexQuerier:
             # Navigate to relevant sections
             sections = self.navigate(topic, top_k=3)
 
-            # Get page ranges
-            page_ranges = [(s.page_start, s.page_end) for s in sections]
+            if not sections:
+                # No relevant sections found, search everything
+                return self.vector_store.search(query, top_k=top_k)
 
+            # Get page ranges from all relevant sections
+            page_ranges = []
+            for section in sections:
+                page_ranges.append((section.page_start, section.page_end))
+            
+            # Use the first section's page range for filtering
+            # (In production, you'd want more sophisticated filtering)
+            first_range = page_ranges[0] if page_ranges else None
+            
             # Search only in those page ranges
             results = self.vector_store.search(
                 query,
                 filter={
                     'page_num': {
-                        '$between': page_ranges[0] if page_ranges else None
+                        '$between': first_range
                     }
-                },
+                } if first_range else None,
                 top_k=top_k
             )
         else:
@@ -400,7 +490,7 @@ class PageIndexQuerier:
         Measures improvement from hierarchical navigation.
         """
         import time
-        
+
         # With PageIndex
         start = time.time()
         with_nav = self.retrieve(query, topic=topic, top_k=top_k)
@@ -417,7 +507,7 @@ class PageIndexQuerier:
             if not chunks:
                 return 0
             relevant = sum(1 for c in chunks if topic.lower() in c.get('content', '').lower())
-            return relevant / len(chunks)
+            return relevant / len(chunks) if chunks else 0
 
         precision_with = relevance_score(with_nav, topic)
         precision_without = relevance_score(without_nav, topic)
@@ -427,12 +517,12 @@ class PageIndexQuerier:
             'topic': topic,
             'with_navigation': {
                 'time': nav_time,
-                'results': with_nav,
+                'results_count': len(with_nav),
                 'precision': precision_with
             },
             'without_navigation': {
                 'time': no_nav_time,
-                'results': without_nav,
+                'results_count': len(without_nav),
                 'precision': precision_without
             },
             'improvement': {
